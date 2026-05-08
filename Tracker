@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GB3 Trainer">
+<title>GB3 Workout Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #ff3d00;
+    --red-dim: #cc3100;
+    --bg: #07070e;
+    --bg2: #0d0d1a;
+    --bg3: #12121f;
+    --border: #1e1e30;
+    --text: #e8e4dc;
+    --muted: #555568;
+    --green: #39d353;
+    --yellow: #ffd600;
+    --orange: #ff9800;
+    --blue: #4fc3f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
+  h1,h2,h3,.label { font-family: 'Barlow Condensed', sans-serif; }
+
+/* HEADER */
+.header { background: var(–bg3); border-bottom: 2px solid var(–red); padding: 16px 16px 0; position: sticky; top: 0; z-index: 200; }
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.app-title { font-family: ‘Barlow Condensed’, sans-serif; }
+.app-subtitle { font-size: 10px; color: var(–red); letter-spacing: 3px; font-weight: 800; }
+.app-name { font-size: 30px; font-weight: 900; letter-spacing: 1px; line-height: 1; }
+.date-badge { font-size: 10px; color: var(–muted); text-align: right; margin-top: 2px; }
+
+/* PROGRESS */
+.progress-wrap { margin-bottom: 10px; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(–muted); margin-bottom: 4px; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 1px; }
+.progress-bar { height: 3px; background: var(–border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(–red); border-radius: 2px; transition: width 0.4s ease; }
+
+/* DAY TABS */
+.day-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-btn { font-family: ‘Barlow Condensed’, sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 1px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(–border); background: var(–bg2); color: var(–muted); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.day-btn.active { background: var(–red); border-color: var(–red); color: #fff; }
+.day-btn.bike { border-color: var(–blue); }
+.day-btn.bike.active { background: var(–blue); border-color: var(–blue); color: #000; }
+
+/* SUB TABS */
+.sub-tabs { display: flex; border-top: 1px solid var(–border); }
+.sub-btn { flex: 1; background: none; border: none; border-bottom: 2px solid transparent; color: var(–muted); padding: 8px; font-size: 11px; font-weight: 800; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+.sub-btn.active { color: var(–red); border-bottom-color: var(–red); }
+
+/* CONTENT */
+.content { padding: 12px 14px; }
+
+/* EXERCISE CARD */
+.ex-card { background: var(–bg2); border: 1px solid var(–border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; transition: border-color 0.3s; }
+.ex-card.done { border-color: var(–red); }
+.ex-header { padding: 12px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.ex-name { font-family: ‘Barlow Condensed’, sans-serif; font-size: 16px; font-weight: 800; letter-spacing: 0.5px; }
+.ex-meta { font-size: 10px; color: var(–muted); margin-top: 2px; letter-spacing: 0.5px; font-family: ‘Barlow Condensed’, sans-serif; }
+.ex-note { font-size: 10px; color: #444; margin-top: 1px; font-style: italic; }
+.ex-muscle { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 1px; padding: 2px 6px; border-radius: 3px; margin-top: 3px; font-family: ‘Barlow Condensed’, sans-serif; }
+.muscle-brust { background: #1a0a00; color: #ff6b35; }
+.muscle-schulter { background: #001a2a; color: #4fc3f7; }
+.muscle-trizeps { background: #1a001a; color: #ce93d8; }
+.muscle-bauch { background: #001a00; color: #81c784; }
+.muscle-lat { background: #0a1a0a; color: #66bb6a; }
+.muscle-rücken { background: #0a0a1a; color: #7986cb; }
+.muscle-bizeps { background: #1a0a0a; color: #ef9a9a; }
+.muscle-trapez { background: #1a1a00; color: #fff176; }
+.ex-right { display: flex; align-items: center; gap: 8px; }
+.sets-badge { font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px; font-weight: 800; color: var(–muted); }
+.sets-badge.progress { color: var(–red); }
+.chevron { color: var(–border); font-size: 14px; transition: transform 0.25s; }
+.chevron.open { transform: rotate(180deg); }
+.ex-body { border-top: 1px solid var(–border); display: none; }
+.ex-body.open { display: block; }
+
+/* SET LOGGER */
+.set-section { padding: 10px 14px; }
+.section-label { font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 8px; }
+.label-red { color: var(–red); }
+.label-green { color: var(–green); }
+.label-yellow { color: var(–yellow); }
+.label-blue { color: var(–blue); }
+.set-row { display: flex; gap: 7px; align-items: center; margin-bottom: 7px; }
+.set-num { width: 26px; height: 26px; border-radius: 50%; background: var(–bg3); border: 1px solid var(–border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(–muted); font-weight: 800; flex-shrink: 0; font-family: ‘Barlow Condensed’, sans-serif; transition: all 0.3s; }
+.set-num.done { background: var(–red); border-color: var(–red); color: #fff; }
+.set-input { flex: 1; background: var(–bg3); border: 1px solid var(–border); border-radius: 6px; padding: 7px 10px; color: var(–text); font-size: 14px; font-family: ‘Barlow Condensed’, sans-serif; font-weight: 700; outline: none; width: 100%; transition: border-color 0.2s; }
+.set-input:focus { border-color: var(–red); }
+.set-input:disabled { opacity: 0.4; }
+.set-confirm { background: var(–red); border: none; border-radius: 6px; padding: 7px 13px; color: #fff; font-size: 16px; cursor: pointer; flex-shrink: 0; font-weight: 800; }
+
+/* CUES */
+.cues-section { padding: 0 14px 10px; }
+.cue-item { font-size: 12px; color: #999; margin-bottom: 5px; padding-left: 10px; border-left: 2px solid #1e3a1e; line-height: 1.4; }
+.cue-arrow { color: var(–green); margin-right: 4px; }
+
+/* CHECKPOINTS */
+.check-section { padding: 8px 14px 12px; background: #08080f; }
+.check-item { font-size: 12px; color: #888; margin-bottom: 5px; line-height: 1.4; }
+
+/* BIKE SESSION */
+.bike-card { background: var(–bg2); border: 1px solid var(–blue); border-radius: 14px; padding: 20px; margin-bottom: 10px; }
+.bike-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.bike-icon { font-size: 36px; }
+.bike-title { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; letter-spacing: 1px; }
+.bike-subtitle { font-size: 11px; color: var(–muted); margin-top: 1px; }
+.bike-target { background: #001a2a; border: 1px solid #1a3a4a; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.bike-target-label { font-size: 10px; color: var(–blue); font-weight: 800; letter-spacing: 2px; font-family: ‘Barlow Condensed’, sans-serif; margin-bottom: 4px; }
+.bike-target-val { font-family: ‘Barlow Condensed’, sans-serif; font-size: 28px; font-weight: 900; color: var(–blue); }
+.bike-target-unit { font-size: 12px; color: var(–muted); margin-left: 4px; }
+.bike-log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.bike-input-wrap { background: var(–bg3); border: 1px solid var(–border); border-radius: 8px; padding: 10px 12px; }
+.bike-input-label { font-size: 10px; color: var(–muted); font-weight: 800; letter-spacing: 1px; font-family: ‘Barlow Condensed’, sans-serif; margin-bottom: 4px; }
+.bike-input { width: 100%; background: none; border: none; color: var(–text); font-size: 22px; font-weight: 900; font-family: ‘Barlow Condensed’, sans-serif; outline: none; }
+.bike-input::placeholder { color: var(–border); }
+.bike-save-btn { width: 100%; padding: 12px; background: var(–blue); border: none; border-radius: 8px; color: #000; font-family: ‘Barlow Condensed’, sans-serif; font-size: 15px; font-weight: 900; letter-spacing: 2px; cursor: pointer; transition: opacity 0.2s; }
+.bike-save-btn:active { opacity: 0.8; }
+.bike-tips { background: #001a08; border: 1px solid #1a3a20; border-radius: 8px; padding: 12px 14px; }
+.bike-tips-label { font-size: 10px; color: var(–green); font-weight: 800; letter-spacing: 2px; font-family: ‘Barlow Condensed’, sans-serif; margin-bottom: 8px; }
+.bike-tip { font-size: 12px; color: #888; margin-bottom: 4px; }
+.bike-history-item { background: var(–bg3); border: 1px solid var(–border); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.bike-hist-date { font-size: 11px; color: var(–muted); }
+.bike-hist-time { font-family: ‘Barlow Condensed’, sans-serif; font-size: 20px; font-weight: 900; color: var(–blue); }
+.bike-hist-diff { font-size: 10px; font-weight: 700; }
+.diff-over { color: var(–green); }
+.diff-under { color: var(–orange); }
+
+/* HISTORY */
+.hist-card { background: var(–bg2); border: 1px solid var(–border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.hist-name { font-family: ‘Barlow Condensed’, sans-serif; font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+.hist-session { margin-bottom: 8px; }
+.hist-date { font-size: 10px; color: var(–muted); margin-bottom: 4px; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 1px; }
+.hist-sets { display: flex; gap: 5px; flex-wrap: wrap; }
+.hist-set { background: var(–bg3); border-radius: 5px; padding: 3px 8px; font-size: 12px; color: #aaa; font-family: ‘Barlow Condensed’, sans-serif; }
+.hist-set span { color: var(–red); font-weight: 800; }
+.empty-state { text-align: center; color: var(–muted); margin-top: 60px; font-size: 14px; line-height: 1.8; }
+
+/* BOTTOM BAR */
+.bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(–bg3); border-top: 2px solid var(–red); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+.bottom-tip { font-size: 10px; color: var(–red); font-weight: 800; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 0.5px; }
+.bottom-pct { font-size: 13px; font-weight: 900; font-family: ‘Barlow Condensed’, sans-serif; color: var(–muted); }
+.bottom-pct.complete { color: var(–red); }
+
+/* MISC */
+.divider { height: 1px; background: var(–border); margin: 0; }
+.tag-wrap { margin-top: 4px; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease; }
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">
+      <div class="app-subtitle">GB3 · WORKOUT TRACKER V3</div>
+      <div class="app-name">TRAINING</div>
+    </div>
+    <div class="date-badge" id="dateDisplay"></div>
+  </div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-labels"><span id="setsLabel">0 / 0 SÄTZE</span><span id="pctLabel">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="sub-tabs" id="subTabs">
+    <button class="sub-btn active" onclick="switchTab('train')">▶ TRAINING</button>
+    <button class="sub-btn" onclick="switchTab('history')">📋 VERLAUF</button>
+  </div>
+</div>
+
+<div class="content" id="mainContent"></div>
+
+<div class="bottom-bar">
+  <div class="bottom-tip" id="bottomTip">⚡ Kein Progressive Overload = Kein Wachstum</div>
+  <div class="bottom-pct" id="bottomPct">0%</div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const DAYS = ["Push A", "Pull A", "Fahrrad"];
+
+const PLAN = {
+  "Push A": [
+    {
+      name: "Chest Press Machine",
+      sets: 3, rep: "5–8", rir: "1-0 RIR", muscle: "Brust", muscleClass: "muscle-brust",
+      note: "Ersetzt Flat Dumbell Press",
+      cues: [
+        "Schulterblätter zusammenziehen & in die Polster drücken — das ist dein Fundament",
+        "Ellbogen ~45° zum Körper, nicht ausflaren",
+        "Kontrolliert zurück (3 Sek), dann explosiv drücken",
+        "Volle Streckung oben — aber Ellbogen nicht hyperextenden"
+      ],
+      checks: [
+        "❓ Brust dehnt sich beim Zurückfahren? Falls nicht → Sitz zu hoch/niedrig",
+        "❓ Schulter vorne schmerzt? → Sitz eine Position höher stellen",
+        "❓ Eine Seite schwächer? → Gewicht reduzieren, Form fokussieren"
+      ]
+    },
+    {
+      name: "Chest Incline Press Machine",
+      sets: 3, rep: "5–8", rir: "1-0 RIR", muscle: "Obere Brust", muscleClass: "muscle-brust",
+      note: "Technogym Selection Chest Incline — obere Brust",
+      cues: [
+        "Sitz so einstellen dass die Griffe auf Brusthöhe starten",
+        "Schulterblätter zurückziehen bevor du drückst",
+        "Bewegungsbahn leicht diagonal (nicht gerade hoch)",
+        "Langsam zurück — maximale Dehnung obere Brust nutzen"
+      ],
+      checks: [
+        "❓ Obere Brust brennt — nicht Schulter vorne? Falls Schulter → Griff zu weit oben",
+        "❓ Nacken zieht sich hoch? → Kopf anlehnen, Kinn neutral",
+        "❓ Pump in der oberen Brust nach dem Satz?"
+      ]
+    },
+    {
+      name: "Butterfly Machine (M913)",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Brust", muscleClass: "muscle-brust",
+      note: "Technogym M913 — konstante Spannung, besser als Dumbbell",
+      cues: [
+        "Arme IMMER leicht gebeugt — gestreckte Arme = Ellbogen/Schulter Stress",
+        "In der offenen Position maximal dehnen — kurz innehalten",
+        "Zusammenführen und 1 Sekunde halten → Brust aktiv kontrahieren",
+        "3 Sekunden zurück — die Exzentrik ist wo du wächst"
+      ],
+      checks: [
+        "❓ Dehnung in der BRUST — nicht in der vorderen Schulter?",
+        "❓ Schmerz in der Schulter beim Öffnen? → Bewegungsweg verkleinern",
+        "❓ Pump in der Brustmitte nach dem Satz?"
+      ]
+    },
+    {
+      name: "Shoulder Press Dumbell (sitzend)",
+      sets: 3, rep: "5–8", rir: "1-0 RIR", muscle: "Schulter", muscleClass: "muscle-schulter",
+      note: "Incline Machine = kein Ersatz für OHP — eigene Übung behalten",
+      cues: [
+        "Rücken angelehnt, minimal nach hinten geneigt",
+        "Hanteln bis Kinnhöhe absenken — nicht tiefer",
+        "Handgelenke gerade halten — kein Abknicken nach hinten",
+        "Core angespannt, Kein Hohlkreuz beim Drücken"
+      ],
+      checks: [
+        "❓ Schulter vorne schmerzt? → Ellbogen leicht nach vorne bringen",
+        "❓ Trapez übernimmt? → Schulterblätter aktiv nach unten halten",
+        "❓ Gleichmäßige Bewegung, kein Knicken zur Seite?"
+      ]
+    },
+    {
+      name: "Side Laterals Delts Machine 900",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Schulter Seite", muscleClass: "muscle-schulter",
+      note: "Technogym Delts Machine 900 — besser als Dumbbell (konstante Spannung)",
+      cues: [
+        "Ellbogen führen die Bewegung — nicht Handgelenke oder Hände",
+        "Nur bis Schulterhöhe — nicht höher (Impingement-Risiko)",
+        "Oben 1 Sekunde halten — dann langsam zurück",
+        "Kein Körpereinsatz, kein Schwung"
+      ],
+      checks: [
+        "❓ Trapez übernimmt? → Gewicht ist zu schwer, reduzieren",
+        "❓ Brennen im seitlichen Delt nach 6 Reps?",
+        "❓ Schulter oben zieht/knirscht? → Ellbogen leicht beugen"
+      ]
+    },
+    {
+      name: "Tricep Overhead Extension (Kabel)",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Trizeps", muscleClass: "muscle-trizeps",
+      note: "NEU — langer Trizepskopf, wird mit Pushdowns nicht erreicht",
+      cues: [
+        "Kabel von hinter dem Kopf — Ellbogen zeigen nach oben, nicht zur Seite",
+        "Ellbogen so eng wie möglich halten — sie sind der Drehpunkt",
+        "Tief in die Dehnung (hinter dem Kopf) bevor du streckst",
+        "Vollständige Streckung nach oben, 1 Sek halten"
+      ],
+      checks: [
+        "❓ Langer Trizepskopf (Innenseite Oberarm) brennt? Das ist das Ziel",
+        "❓ Ellbogen flaren nach außen? → Zu schwer oder schlechte Mobilität",
+        "❓ Schulter schmerzt? → Bewegungsweg leicht verkleinern"
+      ]
+    },
+    {
+      name: "Tricep Pushdowns Rope",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Trizeps", muscleClass: "muscle-trizeps",
+      note: "Lateraler + medialer Kopf — Kombination mit Overhead = voller Trizeps",
+      cues: [
+        "Am Ende des Seils auseinanderziehen (Supination) — maximale Kontraktion",
+        "Ellbogen fest am Körper — kein Bewegen nach vorne",
+        "Vollständige Streckung unten — 1 Sek halten",
+        "Leicht nach vorne gebeugt für bessere Kontraktion"
+      ],
+      checks: [
+        "❓ Ellbogen wandern nach vorne? → Zu schwer",
+        "❓ Beide Trizepsköpfe fühlen sich erschöpft an?",
+        "❓ Handgelenke neutral, kein Abknicken?"
+      ]
+    },
+    {
+      name: "Ab Crunch Machine",
+      sets: 2, rep: "10–15", rir: "1-0 RIR", muscle: "Bauch", muscleClass: "muscle-bauch",
+      note: "2 Sätze reichen — Abs brauchen kein Hochvolumen",
+      cues: [
+        "Bauch zieht die Bewegung — NICHT die Hüfte",
+        "Vollständige Streckung zurück für maximale Dehnung",
+        "Ausatmen beim Zusammenziehen, einatmen beim Öffnen",
+        "Bewusst langsam — kein Schwingen"
+      ],
+      checks: [
+        "❓ Hüftbeuger schmerzen? → Sitz weiter nach hinten schieben",
+        "❓ Bauch oder Nacken arbeitet mehr?",
+        "❓ Dehnung in den Abs beim Zurückbewegen spürbar?"
+      ]
+    }
+  ],
+  "Pull A": [
+    {
+      name: "Pullup Wide",
+      sets: 3, rep: "5–8", rir: "1-0 RIR", muscle: "Lat / Rücken", muscleClass: "muscle-lat",
+      note: "Hauptübung — kein Ersatz. Wenn noch keine 5 Reps: Band-Assisted",
+      cues: [
+        "ERST Schulterblätter runterziehen — DANN Ellbogen beugen. Diese Reihenfolge ist alles",
+        "Brust zur Stange hochziehen — nicht Kinn",
+        "Leicht nach hinten lehnen für mehr Lat-Aktivierung",
+        "Volle Streckung unten — kein halbes ROM"
+      ],
+      checks: [
+        "❓ Bizeps macht die Arbeit statt Lat? → Schulterblätter zuerst bewegen",
+        "❓ V-Form im Rücken spürbar?",
+        "❓ Kein Schwingen, keine Hüftbewegung?"
+      ]
+    },
+    {
+      name: "Narrow Pulldown",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Lat Unterseite", muscleClass: "muscle-lat",
+      note: "NEU zurück — enger Griff trifft Lat-Unterseite, weiter Griff trifft nicht",
+      cues: [
+        "Enger Griff, neutraler Griff (Handflächen zueinander)",
+        "Ellbogen nah am Körper vorbeiziehen — in die Hüfte",
+        "Brust öffnen und nach oben strecken während du ziehst",
+        "Schulterblätter aktiv runter bevor die Bewegung beginnt"
+      ],
+      checks: [
+        "❓ Lat-Unterseite (nah an der Hüfte) kontrahiert spürbar?",
+        "❓ Nacken entspannt? Schultern nicht hochgezogen?",
+        "❓ Ellbogen führen — nicht die Hände?"
+      ]
+    },
+    {
+      name: "Seated Cable Row (Oberrücken)",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Oberer Rücken", muscleClass: "muscle-rücken",
+      note: "Ellbogen hoch = Oberrücken. Ellbogen tief = Lat. Hier: hoch.",
+      cues: [
+        "Schulterblätter am Ende zusammenziehen und 1 Sek halten",
+        "Ellbogen nach hinten OBEN führen — nicht nach unten",
+        "Leichte Vorbeugung beim Strecken für volle Dehnung",
+        "Kein Hüftschwung — Oberkörper bleibt stabil"
+      ],
+      checks: [
+        "❓ Rhomboids / oberer Rücken brennt — nicht Bizeps?",
+        "❓ Schultern rollen nach vorne beim Strecken?",
+        "❓ Schulterblätter-Kontraktion am Ende spürbar?"
+      ]
+    },
+    {
+      name: "Rear Delt Fly Machine",
+      sets: 3, rep: "10–15", rir: "1-0 RIR", muscle: "Hintere Schulter", muscleClass: "muscle-schulter",
+      note: "Hintere Schulter ist oft schwächste Stelle — 3 Sätze notwendig",
+      cues: [
+        "Arme leicht gebeugt, Ellbogen führen die Bewegung",
+        "Bewegung kommt aus der HINTEREN Schulter — nicht Trizeps oder Ellbogen",
+        "Maximale Kontraktion am Ende halten — 1 Sek",
+        "Langsam zurück (3 Sek) — Exzentrik nutzen"
+      ],
+      checks: [
+        "❓ Hintere Schulter brennt — nicht Trizeps?",
+        "❓ Körper stabil, kein Schwung?",
+        "❓ Beide Seiten gleichmäßig stark?"
+      ]
+    },
+    {
+      name: "Shrug Dumbell",
+      sets: 2, rep: "8–12", rir: "1-0 RIR", muscle: "Trapez", muscleClass: "muscle-trapez",
+      note: "2 Sätze reichen — kein Haupttreiber für Hypertrophie",
+      cues: [
+        "Nur hoch und runter — keine Kreisbewegung (schadet dem Schultergelenk)",
+        "Schultern maximal hochziehen — so hoch wie möglich",
+        "1 Sekunde Pause oben halten",
+        "Arme gestreckt — nicht beugen"
+      ],
+      checks: [
+        "❓ Trapez oben spürbar kontrahiert?",
+        "❓ Nacken schmerzt? → Kopf neutral halten",
+        "❓ Voller Bewegungsweg oder zu schwer?"
+      ]
+    },
+    {
+      name: "Preacher Curl Dumbell",
+      sets: 3, rep: "8–12", rir: "1-0 RIR", muscle: "Bizeps", muscleClass: "muscle-bizeps",
+      note: "Beste Bizeps-Übung für maximale Dehnung — nicht überspringen",
+      cues: [
+        "Arm vollständig strecken unten — maximale Dehnung im Bizeps",
+        "3 Sekunden exzentrisch (runter) — das ist der Wachstumsreiz",
+        "Handgelenk supiniert (gedreht) oben für maximale Kontraktion",
+        "Ellbogen bleibt auf der Ablage — kein Abheben"
+      ],
+      checks: [
+        "❓ Dehnung tief im Bizeps (unten) spürbar?",
+        "❓ Ellbogen hebt sich ab? → Zu schwer, Gewicht reduzieren",
+        "❓ Sehnenschmerz am Ellbogen? → Nicht ganz strecken"
+      ]
+    },
+    {
+      name: "Standing Hammer Curl",
+      sets: 2, rep: "10–12", rir: "1-0 RIR", muscle: "Brachialis", muscleClass: "muscle-bizeps",
+      note: "Brachialis unter Bizeps — gibt Armdicke, nicht nur Armhöhe",
+      cues: [
+        "Neutraler Griff (Daumen oben) die ganze Bewegung",
+        "Ellbogen fest am Körper — kein Schwingen",
+        "Bis zur Schulter hochführen, kontrolliert",
+        "Alternierend oder zusammen — beide Varianten gut"
+      ],
+      checks: [
+        "❓ Brachialis (seitlich am Ellbogen) spürbar?",
+        "❓ Kein Oberkörperschwung für die letzten Reps?",
+        "❓ Gleichmäßig beide Seiten?"
+      ]
+    }
+  ]
+};
+
+const BIKE_TARGET = 60;
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let activeDay = "Push A";
+let activeTab = "train";
+let expanded = null;
+
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem("gb3_v3") || "{}"); } catch { return {}; }
+}
+function setStorage(d) {
+  try { localStorage.setItem("gb3_v3", JSON.stringify(d)); } catch {}
+}
+
+function today() { return new Date().toISOString().split("T")[0]; }
+function fmtDate(d) {
+  const parts = d.split("-");
+  return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
+
+// ─── RENDER ─────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById("dateDisplay").textContent = fmtDate(today());
+  renderDayTabs();
+  renderContent();
+}
+
+function renderDayTabs() {
+  const el = document.getElementById("dayTabs");
+  el.innerHTML = DAYS.map(d => {
+    const isBike = d === "Fahrrad";
+    const isActive = d === activeDay;
+    return `<button class="day-btn${isBike ? " bike" : ""}${isActive ? " active" : ""}" onclick="switchDay('${d}')">${isBike ? "🚴 " : ""}${d}</button>`;
+  }).join("");
+}
+
+function switchDay(day) {
+  activeDay = day;
+  expanded = null;
+  renderDayTabs();
+  renderContent();
+  updateProgress();
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll(".sub-btn").forEach((b, i) => {
+    b.classList.toggle("active", (i === 0 && tab === "train") || (i === 1 && tab === "history"));
+  });
+  renderContent();
+}
+
+function renderContent() {
+  if (activeDay === "Fahrrad") {
+    document.getElementById("progressWrap").style.display = "none";
+    document.getElementById("subTabs").style.display = activeTab === "history" ? "flex" : "flex";
+    if (activeTab === "history") { renderBikeHistory(); }
+    else { renderBike(); }
+  } else {
+    document.getElementById("progressWrap").style.display = "block";
+    if (activeTab === "history") { renderHistory(); }
+    else { renderTraining(); }
+  }
+  updateProgress();
+}
+
+// ─── TRAINING ───────────────────────────────────────────────────────────────
+function renderTraining() {
+  const exercises = PLAN[activeDay] || [];
+  const storage = getStorage();
+  const key = `${activeDay}_${today()}`;
+  const dayData = storage[key] || {};
+
+  const html = exercises.map((ex, ei) => {
+    const exData = dayData[ex.name] || {};
+    const doneSets = Array.from({length: ex.sets}, (_,si) => exData[si]?.done).filter(Boolean).length;
+    const allDone = doneSets === ex.sets;
+    const isOpen = expanded === ei;
+
+    const setsHtml = Array.from({length: ex.sets}, (_,si) => {
+      const s = exData[si] || {};
+      const isDone = !!s.done;
+      return `
+        <div class="set-row" id="setrow_${ei}_${si}">
+          <div class="set-num${isDone ? " done" : ""}" id="setnum_${ei}_${si}">${isDone ? "✓" : si+1}</div>
+          <input class="set-input" type="number" placeholder="kg" id="kg_${ei}_${si}" value="${s.weight || ""}" ${isDone ? "disabled" : ""} inputmode="decimal" />
+          <input class="set-input" type="number" placeholder="Reps" id="rep_${ei}_${si}" value="${s.reps || ""}" ${isDone ? "disabled" : ""} inputmode="numeric" />
+          ${!isDone ? `<button class="set-confirm" onclick="logSet('${ex.name}',${ei},${si})">✓</button>` : ""}
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="ex-card${allDone ? " done" : ""}" id="card_${ei}">
+        <div class="ex-header" onclick="toggleEx(${ei})">
+          <div style="flex:1">
+            <div class="ex-name">${allDone ? "✓ " : ""}${ex.name}</div>
+            <div class="ex-meta">${ex.sets} SETS · ${ex.rep} REPS · ${ex.rir}</div>
+            <div class="ex-note">${ex.note}</div>
+            <div class="tag-wrap"><span class="ex-muscle ${ex.muscleClass}">${ex.muscle.toUpperCase()}</span></div>
+          </div>
+          <div class="ex-right">
+            <div class="sets-badge${doneSets > 0 ? " progress" : ""}">${doneSets}/${ex.sets}</div>
+            <div class="chevron${isOpen ? " open" : ""}">▼</div>
+          </div>
+        </div>
+        <div class="ex-body${isOpen ? " open fade-in" : ""}" id="body_${ei}">
+          <div class="set-section">
+            <div class="section-label label-red">SÄTZE LOGGEN</div>
+            ${setsHtml}
+          </div>
+          <div class="cues-section">
+            <div class="section-label label-green">AUSFÜHRUNG</div>
+            ${ex.cues.map(c => `<div class="cue-item"><span class="cue-arrow">→</span>${c}</div>`).join("")}
+          </div>
+          <div class="check-section">
+            <div class="section-label label-yellow">SELBSTCHECK</div>
+            ${ex.checks.map(c => `<div class="check-item">${c}</div>`).join("")}
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+function toggleEx(ei) {
+  expanded = expanded === ei ? null : ei;
+  renderTraining();
+  updateProgress();
+  if (expanded !== null) {
+    setTimeout(() => {
+      const card = document.getElementById("card_" + ei);
+      if (card) card.scrollIntoView({behavior: "smooth", block: "nearest"});
+    }, 50);
+  }
+}
+
+function logSet(exName, ei, si) {
+  const kg = document.getElementById(`kg_${ei}_${si}`)?.value;
+  const rep = document.getElementById(`rep_${ei}_${si}`)?.value;
+  if (!kg || !rep) { alert("Bitte kg und Reps eintragen!"); return; }
+
+  const storage = getStorage();
+  const key = `${activeDay}_${today()}`;
+  if (!storage[key]) storage[key] = {};
+  if (!storage[key][exName]) storage[key][exName] = {};
+  storage[key][exName][si] = { weight: parseFloat(kg), reps: parseInt(rep), done: true };
+  setStorage(storage);
+
+  renderTraining();
+  updateProgress();
+}
+
+// ─── BIKE ────────────────────────────────────────────────────────────────────
+function renderBike() {
+  const storage = getStorage();
+  const bikeHistory = Object.entries(storage)
+    .filter(([k]) => k.startsWith("bike_"))
+    .map(([k, v]) => ({date: k.replace("bike_",""), ...v}))
+    .sort((a,b) => b.date.localeCompare(a.date));
+
+  const lastSession = bikeHistory[0];
+  const avgTime = bikeHistory.length ? Math.round(bikeHistory.slice(0,5).reduce((a,h) => a + h.minutes, 0) / Math.min(bikeHistory.length, 5)) : null;
+
+  document.getElementById("mainContent").innerHTML = `
+    <div class="bike-card">
+      <div class="bike-header">
+        <div class="bike-icon">🚴</div>
+        <div>
+          <div class="bike-title">FAHRRAD SESSION</div>
+          <div class="bike-subtitle">Cardio · Ausdauer · Fettverbrennung</div>
+        </div>
+      </div>
+
+      <div class="bike-target">
+        <div class="bike-target-label">ZIEL HEUTE</div>
+        <div><span class="bike-target-val">${BIKE_TARGET}</span><span class="bike-target-unit">Minuten</span></div>
+        ${avgTime ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Dein Schnitt: ${avgTime} Min</div>` : ""}
+      </div>
+
+      <div class="section-label label-blue" style="margin-bottom:8px">SESSION EINTRAGEN</div>
+      <div class="bike-log-grid">
+        <div class="bike-input-wrap">
+          <div class="bike-input-label">MINUTEN</div>
+          <input class="bike-input" type="number" id="bikeMinutes" placeholder="60" inputmode="numeric" />
+        </div>
+        <div class="bike-input-wrap">
+          <div class="bike-input-label">INTENSITÄT</div>
+          <select id="bikeIntensity" style="width:100%;background:none;border:none;color:var(--text);font-size:18px;font-weight:900;font-family:'Barlow Condensed',sans-serif;outline:none;">
+            <option value="locker" style="background:#0d0d1a">🟢 Locker</option>
+            <option value="mittel" selected style="background:#0d0d1a">🟡 Mittel</option>
+            <option value="hart" style="background:#0d0d1a">🔴 Hart</option>
+          </select>
+        </div>
+      </div>
+      <button class="bike-save-btn" onclick="saveBike()">SESSION SPEICHERN ✓</button>
+    </div>
+
+    <div class="bike-tips">
+      <div class="bike-tips-label">COACH TIPPS — EFFEKTIVES CARDIO</div>
+      <div class="bike-tip">→ <strong>Zone 2 (locker)</strong>: Unterhaltung möglich → Beste Fettverbrennung, Herz-Kreislauf</div>
+      <div class="bike-tip">→ <strong>Zone 3-4 (mittel-hart)</strong>: Nur ein paar Sätze Worte → Höherer Kalorienverbrauch</div>
+      <div class="bike-tip">→ <strong>60 Min Zone 2</strong> nach dem Krafttraining = optimale Kombi</div>
+      <div class="bike-tip">→ Schwitzt du? Atmest du hörbar? → Gutes Zeichen</div>
+      <div class="bike-tip">→ Gleiche Zeit aber schwerer/schneller = Progressive Overload auch bei Cardio</div>
+    </div>
+
+    ${lastSession ? `
+    <div style="margin-top:12px">
+      <div class="section-label label-blue" style="margin-bottom:8px">LETZTE SESSION</div>
+      <div class="bike-history-item">
+        <div>
+          <div class="bike-hist-date">${fmtDate(lastSession.date)}</div>
+          <div style="font-size:11px;color:var(--muted)">${lastSession.intensity || "—"}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="bike-hist-time">${lastSession.minutes} Min</div>
+          <div class="bike-hist-diff ${lastSession.minutes >= BIKE_TARGET ? "diff-over" : "diff-under"}">
+            ${lastSession.minutes >= BIKE_TARGET ? `+${lastSession.minutes - BIKE_TARGET} über Ziel` : `${BIKE_TARGET - lastSession.minutes} unter Ziel`}
+          </div>
+        </div>
+      </div>
+    </div>` : ""}
+  `;
+}
+
+function saveBike() {
+  const min = parseInt(document.getElementById("bikeMinutes")?.value);
+  if (!min || min < 1) { alert("Bitte Minuten eintragen!"); return; }
+  const intensity = document.getElementById("bikeIntensity")?.value;
+  const storage = getStorage();
+  storage[`bike_${today()}`] = { minutes: min, intensity };
+  setStorage(storage);
+  renderBike();
+  document.getElementById("bikeMinutes").value = "";
+}
+
+function renderBikeHistory() {
+  const storage = getStorage();
+  const history = Object.entries(storage)
+    .filter(([k]) => k.startsWith("bike_"))
+    .map(([k, v]) => ({date: k.replace("bike_",""), ...v}))
+    .sort((a,b) => b.date.localeCompare(a.date));
+
+  if (!history.length) {
+    document.getElementById("mainContent").innerHTML = `<div class="empty-state">🚴<br>Noch keine Fahrrad-Sessions.<br>Erster Tritt fehlt noch!</div>`;
+    return;
+  }
+
+  const totalMin = history.reduce((a,h) => a + h.minutes, 0);
+  const avgMin = Math.round(totalMin / history.length);
+
+  document.getElementById("mainContent").innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">SESSIONS</div>
+        <div style="font-size:24px;font-weight:900;font-family:'Barlow Condensed',sans-serif;color:var(--blue)">${history.length}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">∅ MINUTEN</div>
+        <div style="font-size:24px;font-weight:900;font-family:'Barlow Condensed',sans-serif;color:var(--blue)">${avgMin}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">GESAMT</div>
+        <div style="font-size:24px;font-weight:900;font-family:'Barlow Condensed',sans-serif;color:var(--blue)">${totalMin}<span style="font-size:12px"> Min</span></div>
+      </div>
+    </div>
+    ${history.map(h => `
+      <div class="bike-history-item">
+        <div>
+          <div class="bike-hist-date">${fmtDate(h.date)}</div>
+          <div style="font-size:11px;color:var(--muted)">${h.intensity || "—"}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="bike-hist-time">${h.minutes} Min</div>
+          <div class="bike-hist-diff ${h.minutes >= BIKE_TARGET ? "diff-over" : "diff-under"}">
+            ${h.minutes >= BIKE_TARGET ? "✓ Ziel erreicht" : `${BIKE_TARGET - h.minutes} Min unter Ziel`}
+          </div>
+        </div>
+      </div>`).join("")}
+  `;
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const exercises = PLAN[activeDay] || [];
+  const storage = getStorage();
+  let hasData = false;
+
+  const html = exercises.map(ex => {
+    const sessions = Object.entries(storage)
+      .filter(([k]) => k.startsWith(activeDay + "_"))
+      .map(([k, d]) => ({date: k.replace(activeDay + "_", ""), data: d[ex.name]}))
+      .filter(s => s.data)
+      .sort((a,b) => b.date.localeCompare(a.date))
+      .slice(0, 4);
+
+    if (!sessions.length) return "";
+    hasData = true;
+
+    return `
+      <div class="hist-card">
+        <div class="hist-name">${ex.name}</div>
+        ${sessions.map(s => {
+          const sets = Object.values(s.data).filter(Boolean);
+          return `
+            <div class="hist-session">
+              <div class="hist-date">${fmtDate(s.date)}</div>
+              <div class="hist-sets">
+                ${sets.map((set, i) => `<div class="hist-set">S${i+1}: <span>${set.weight}kg×${set.reps}</span></div>`).join("")}
+              </div>
+            </div>`;
+        }).join("")}
+      </div>`;
+  }).join("");
+
+  document.getElementById("mainContent").innerHTML = hasData ? html : `<div class="empty-state">📋<br>Noch keine Sessions geloggt.<br>Starte dein erstes Training!</div>`;
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+function updateProgress() {
+  if (activeDay === "Fahrrad") {
+    document.getElementById("bottomTip").textContent = "🚴 Ziel: 60 Minuten — aber jede Minute zählt";
+    document.getElementById("bottomPct").textContent = "";
+    return;
+  }
+
+  const exercises = PLAN[activeDay] || [];
+  const storage = getStorage();
+  const key = `${activeDay}_${today()}`;
+  const dayData = storage[key] || {};
+
+  let total = 0, done = 0;
+  exercises.forEach(ex => {
+    total += ex.sets;
+    for(let si = 0; si < ex.sets; si++) {
+      if (dayData[ex.name]?.[si]?.done) done++;
+    }
+  });
+
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById("setsLabel").textContent = `${done} / ${total} SÄTZE`;
+  document.getElementById("pctLabel").textContent = pct + "%";
+  document.getElementById("progressFill").style.width = pct + "%";
+
+  const pctEl = document.getElementById("bottomPct");
+  pctEl.textContent = pct === 100 ? "DONE ✓" : pct + "%";
+  pctEl.className = "bottom-pct" + (pct === 100 ? " complete" : "");
+  document.getElementById("bottomTip").textContent = pct === 100 ? "🔥 Session abgeschlossen — gute Arbeit!" : "⚡ Kein Progressive Overload = Kein Wachstum";
+}
+
+// ─── START ───────────────────────────────────────────────────────────────────
+init();
+</script>
+
+</body>
+</html>
